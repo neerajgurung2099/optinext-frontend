@@ -1,12 +1,14 @@
 import { useDidMount } from "@/hooks";
 import { useEffect, useState } from "react";
 import firebase from "@/services/firebase";
+import { useSelector } from "react-redux";
 
 const useRecommendedProducts = (itemsCount) => {
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const didMount = useDidMount(true);
+  const { user } = useSelector((state) => ({ user: state.auth }));
 
   const fetchRecommendedProducts = async () => {
     try {
@@ -14,9 +16,7 @@ const useRecommendedProducts = (itemsCount) => {
       setError("");
       const products = await firebase.getAllProducts();
 
-      const userHistory = await firebase.getUserPurchaseHistory(
-        "0LXx7esqyjeHBXEBmavh"
-      );
+      const userHistory = await firebase.getUserPurchaseHistory(user.id);
       console.log(import.meta.env.VITE_BACKEND_API);
       const res = await fetch(
         `${import.meta.env.VITE_BACKEND_API}/api/recommend`,
@@ -27,7 +27,7 @@ const useRecommendedProducts = (itemsCount) => {
             products,
             userHistory,
           }),
-        }
+        },
       );
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
