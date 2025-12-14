@@ -39,7 +39,7 @@ const AppRouter = () => (
           exact
           path={ROUTES.FEATURED_PRODUCTS}
         />
-        <Route
+        <ClientRoute
           component={view.RecommendedProducts}
           exact
           path={ROUTES.RECOMMENDED_PRODUCTS}

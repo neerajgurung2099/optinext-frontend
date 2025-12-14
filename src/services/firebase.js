@@ -59,7 +59,7 @@ class Firebase {
     const user = this.auth.currentUser;
     const cred = app.auth.EmailAuthProvider.credential(
       user.email,
-      currentPassword
+      currentPassword,
     );
 
     return user.reauthenticateWithCredential(cred);
@@ -104,6 +104,14 @@ class Firebase {
 
   getSingleProduct = (id) => this.db.collection("products").doc(id).get();
 
+  getAllProducts = async () => {
+    const snapshot = await this.db.collection("products").get();
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  };
   getProducts = (lastRefKey) => {
     let didTimeout = false;
 
@@ -120,7 +128,7 @@ class Firebase {
             const snapshot = await query.get();
             const products = [];
             snapshot.forEach((doc) =>
-              products.push({ id: doc.id, ...doc.data() })
+              products.push({ id: doc.id, ...doc.data() }),
             );
             const lastKey = snapshot.docs[snapshot.docs.length - 1];
 
@@ -147,7 +155,7 @@ class Firebase {
             if (!didTimeout) {
               const products = [];
               snapshot.forEach((doc) =>
-                products.push({ id: doc.id, ...doc.data() })
+                products.push({ id: doc.id, ...doc.data() }),
               );
               const lastKey = snapshot.docs[snapshot.docs.length - 1];
 
@@ -262,6 +270,36 @@ class Firebase {
     this.db.collection("products").doc(id).update(updates);
 
   removeProduct = (id) => this.db.collection("products").doc(id).delete();
+
+  getUserPurchaseHistory = async (userId) => {
+    try {
+      const ordersSnap = await this.db
+        .collection("orders")
+        .where("userId", "==", userId)
+        .get();
+
+      if (ordersSnap.empty) return [];
+
+      const purchased = [];
+
+      ordersSnap.forEach((orderDoc) => {
+        const data = orderDoc.data();
+
+        // assuming items = [{ id: productId, quantity, ... }]
+        if (data.items && Array.isArray(data.items)) {
+          data.items.forEach((item) => {
+            if (item.id) purchased.push(item.id);
+          });
+        }
+      });
+
+      // return unique IDs
+      return [...new Set(purchased)];
+    } catch (error) {
+      console.error("Error fetching user purchase history:", error);
+      return [];
+    }
+  };
 }
 
 const firebaseInstance = new Firebase();
