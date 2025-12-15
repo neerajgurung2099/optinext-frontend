@@ -300,6 +300,14 @@ class Firebase {
       return [];
     }
   };
+  createOrder = async (order) => {
+    const ref = await this.db.collection("orders").add({
+      ...order,
+      createdAt: app.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return ref.id;
+  };
 }
 
 const firebaseInstance = new Firebase();
